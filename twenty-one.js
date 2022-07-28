@@ -1,18 +1,41 @@
+const shuffle = require("shuffle-array");
 class Card {
-  constructor() {
+  constructor(suit, rank) {
     // STUB
     // What sort of suit does a card need?
     // Rank? Suit? Points?
+    this.suit = suit;
+    this.rank = rank;
   }
 }
 
 class Deck {
+  static SUITS = ["SPADES", "CLUBS", "HEARTS", "DIAMONDS"];
+  static RANKS = [
+    "ACE",
+    "KING",
+    "QUEEN",
+    "JACK",
+    "10",
+    "9",
+    "8",
+    "7",
+    "6",
+    "5",
+    "4",
+    "3",
+    "2",
+  ];
   constructor() {
-    // STUB
-    // What sort of state does a deck need?
-    // 52 Cards?
-    // obviously, we need some data structure to keep track of cards
-    // array, object, something else?
+    this.deck = [];
+    for (let suitIdx = 0; suitIdx < 4; suitIdx += 1) {
+      for (let rankIdx = 0; rankIdx < 13; rankIdx += 1) {
+        let suit = Deck.SUITS[suitIdx];
+        let rank = Deck.RANKS[rankIdx];
+        this.deck.push(new Card(suit, rank));
+      }
+    }
+    shuffle(this.deck);
   }
 
   deal() {
@@ -124,6 +147,10 @@ class TwentyOneGame {
   }
 
   dealerTurn() {
+    // STUB
+  }
+
+  displayWelcomeMessage() {
     // STUB
   }
 
