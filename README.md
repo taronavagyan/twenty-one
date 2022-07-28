@@ -1,1 +1,1 @@
-# twenty-one
+# A simple game of 21
