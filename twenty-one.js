@@ -1,12 +1,22 @@
 const shuffle = require("shuffle-array");
+const readline = require("readline-sync");
 class Card {
   constructor(suit, rank) {
     this.suit = suit;
     this.rank = rank;
+    this.isHidden = false;
   }
 
   getRank() {
     return this.rank;
+  }
+
+  hide() {
+    this.isHidden = true;
+  }
+
+  reveal() {
+    this.isHidden = false;
   }
 }
 
@@ -59,7 +69,7 @@ class Participant {
     return cardRanks.reduce((total, rank) => {
       if (Number(rank)) return (total += Number(rank));
 
-      if (["K", "Q", "J"].includes(rank[0])) {
+      if ("KQJ".includes(rank[0])) {
         return (total += 10);
       } else {
         return (total += 11);
@@ -72,7 +82,14 @@ class Participant {
   }
 
   displayHand() {
-    this.hand.forEach((card) => console.log(`${card.rank} of ${card.suit}`));
+    this.hand.forEach((card) => {
+      if (card.isHidden) {
+        console.log("> ???");
+      } else {
+        console.log(`> ${card.rank} of ${card.suit}`);
+      }
+    });
+    console.log("");
   }
 
   resetHand() {
@@ -80,7 +97,7 @@ class Participant {
   }
 
   hit() {
-    return true;
+    console.log("Player hits...");
   }
 
   stay() {
@@ -88,13 +105,21 @@ class Participant {
   }
 
   isBusted() {
-    return this.score > 21;
+    return this.score() > 21;
+  }
+
+  hasTwentyOne() {
+    return this.score() === 21;
   }
 }
 
 class Player extends Participant {
   constructor() {
     super();
+  }
+
+  hit() {
+    console.log("You hit...");
   }
 }
 
@@ -103,12 +128,16 @@ class Dealer extends Participant {
     super();
   }
 
+  hit() {
+    console.log("Dealer hits...");
+  }
+
   hide() {
-    // STUB
+    this.hand[1].hide();
   }
 
   reveal() {
-    // STUB
+    this.hand[1].reveal();
   }
 }
 
@@ -121,10 +150,12 @@ class TwentyOneGame {
 
   start() {
     // SPIKE
+    console.clear();
     this.displayWelcomeMessage();
     this.dealCards();
     this.showCards();
     this.playerTurn();
+    console.log("");
     this.dealerTurn();
     this.displayResult();
     this.displayGoodbyeMessage();
@@ -138,27 +169,57 @@ class TwentyOneGame {
   }
 
   showCards() {
-    console.log("Your cards: ");
-    console.log("");
+    console.log("Your cards... ");
     this.player.displayHand();
-    console.log("");
-    console.log("Dealer's cards: ");
-    console.log("");
+    console.log("Dealer's cards... ");
+    this.dealer.hide();
     this.dealer.displayHand();
-    console.log("");
   }
 
   playerTurn() {
-    // STUB
+    if (this.player.hasTwentyOne()) {
+      console.log("You have 21!");
+      return;
+    }
+    while (this.getPlayerMove() === "h") {
+      this.player.hit();
+      this.player.addToHand(this.deck.getTopCard());
+      this.player.displayHand();
+
+      if (this.player.isBusted()) {
+        console.log("You busted.");
+        return;
+      }
+    }
+  }
+
+  getPlayerMove() {
+    let response;
+    while (true) {
+      console.log("Would you like to hit or stay? (h/s)");
+      let response = readline.question().toLowerCase()[0];
+
+      if (!"hs".includes(response)) {
+        console.log("Invalid response... Try again.");
+      } else {
+        return response;
+      }
+    }
   }
 
   dealerTurn() {
-    if (this.player.isBusted() || this.player.score() < this.dealer.score()) {
-      console.log("Dealer wins!");
-    } else if (this.player.score() === this.dealer.score()) {
-      console.log("It's a tie!");
-    } else {
-      console.log("You win!");
+    if (this.player.isBusted()) return;
+    this.dealer.reveal();
+    console.log("Dealer's cards...");
+    this.dealer.displayHand();
+
+    while (this.dealer.score() < 17) {
+      this.dealer.hit();
+      this.dealer.addToHand(this.deck.getTopCard());
+      this.dealer.displayHand();
+      if (this.dealer.isBusted()) {
+        console.log("Dealer busts.");
+      }
     }
   }
 
@@ -168,7 +229,17 @@ class TwentyOneGame {
   }
 
   displayResult() {
-    // STUB
+    if (this.player.isBusted()) {
+      console.log("Dealer wins!");
+    } else if (this.dealer.isBusted()) {
+      console.log("You win!");
+    } else if (this.player.score() < this.dealer.score()) {
+      console.log("Dealer wins!");
+    } else if (this.player.score() === this.dealer.score()) {
+      console.log("It's a tie!");
+    } else {
+      console.log("You win!");
+    }
   }
 
   displayGoodbyeMessage() {
