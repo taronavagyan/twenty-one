@@ -1,11 +1,12 @@
 const shuffle = require("shuffle-array");
 class Card {
   constructor(suit, rank) {
-    // STUB
-    // What sort of suit does a card need?
-    // Rank? Suit? Points?
     this.suit = suit;
     this.rank = rank;
+  }
+
+  getRank() {
+    return this.rank;
   }
 }
 
@@ -52,10 +53,6 @@ class Participant {
     this.balance = 5;
     this.score = 0;
     this.hand = [];
-    // STUB
-    // What sort of state does a participant need?
-    // Score? Hand? Amount of money available?
-    // What else goes here? All the redundant behaviors from Player and Dealer?
   }
 
   addToHand(card) {
@@ -108,10 +105,6 @@ class TwentyOneGame {
     this.player = new Player();
     this.dealer = new Dealer();
     this.deck = new Deck();
-
-    // STUB
-    // What sort of state does the game need?
-    // A deck? Two participants?
   }
 
   start() {
@@ -136,6 +129,19 @@ class TwentyOneGame {
     // STUB
   }
 
+  tallyScore(hand) {
+    let ranks = hand.map((card) => card.getRank());
+    return ranks.reduce((total, rank) => {
+      if (Number(rank)) return (total += Number(rank));
+
+      if (["K", "Q", "J"].includes(rank[0])) {
+        return (total += 10);
+      } else {
+        return (total += 11);
+      }
+    }, 0);
+  }
+
   playerTurn() {
     // STUB
   }
@@ -145,7 +151,8 @@ class TwentyOneGame {
   }
 
   displayWelcomeMessage() {
-    // STUB
+    console.log("Welcome to 21. Good luck!");
+    console.log("");
   }
 
   displayResult() {
@@ -153,12 +160,10 @@ class TwentyOneGame {
   }
 
   displayGoodbyeMessage() {
-    // STUB
+    console.log("Thanks for playing 21. See you soon!");
+    console.log("");
   }
 }
 
 let game = new TwentyOneGame();
 game.start();
-
-console.log(game.player.hand);
-console.log(game.dealer.hand);
