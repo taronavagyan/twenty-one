@@ -51,12 +51,28 @@ class Deck {
 class Participant {
   constructor() {
     this.balance = 5;
-    this.score = 0;
     this.hand = [];
+  }
+
+  score() {
+    let cardRanks = this.hand.map((card) => card.getRank());
+    return cardRanks.reduce((total, rank) => {
+      if (Number(rank)) return (total += Number(rank));
+
+      if (["K", "Q", "J"].includes(rank[0])) {
+        return (total += 10);
+      } else {
+        return (total += 11);
+      }
+    }, 0);
   }
 
   addToHand(card) {
     this.hand.push(card);
+  }
+
+  displayHand() {
+    this.hand.forEach((card) => console.log(`${card.rank} of ${card.suit}`));
   }
 
   resetHand() {
@@ -64,19 +80,15 @@ class Participant {
   }
 
   hit() {
-    // STUB
+    return true;
   }
 
   stay() {
-    // STUB
+    return false;
   }
 
   isBusted() {
-    // STUB
-  }
-
-  score() {
-    // STUB
+    return this.score > 21;
   }
 }
 
@@ -126,20 +138,14 @@ class TwentyOneGame {
   }
 
   showCards() {
-    // STUB
-  }
-
-  tallyScore(hand) {
-    let ranks = hand.map((card) => card.getRank());
-    return ranks.reduce((total, rank) => {
-      if (Number(rank)) return (total += Number(rank));
-
-      if (["K", "Q", "J"].includes(rank[0])) {
-        return (total += 10);
-      } else {
-        return (total += 11);
-      }
-    }, 0);
+    console.log("Your cards: ");
+    console.log("");
+    this.player.displayHand();
+    console.log("");
+    console.log("Dealer's cards: ");
+    console.log("");
+    this.dealer.displayHand();
+    console.log("");
   }
 
   playerTurn() {
@@ -147,7 +153,13 @@ class TwentyOneGame {
   }
 
   dealerTurn() {
-    // STUB
+    if (this.player.isBusted() || this.player.score() < this.dealer.score()) {
+      console.log("Dealer wins!");
+    } else if (this.player.score() === this.dealer.score()) {
+      console.log("It's a tie!");
+    } else {
+      console.log("You win!");
+    }
   }
 
   displayWelcomeMessage() {
@@ -160,6 +172,7 @@ class TwentyOneGame {
   }
 
   displayGoodbyeMessage() {
+    console.log("");
     console.log("Thanks for playing 21. See you soon!");
     console.log("");
   }
@@ -167,3 +180,6 @@ class TwentyOneGame {
 
 let game = new TwentyOneGame();
 game.start();
+
+let player = new Player();
+player.hand = game.player.hand;
