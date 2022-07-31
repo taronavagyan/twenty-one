@@ -66,6 +66,7 @@ class Participant {
 
   score() {
     let cardRanks = this.hand.map((card) => card.getRank());
+
     return cardRanks.reduce((total, rank) => {
       if (Number(rank)) return (total += Number(rank));
 
@@ -89,6 +90,7 @@ class Participant {
         console.log(`> ${card.rank} of ${card.suit}`);
       }
     });
+    console.log("Score: " + this.score());
     console.log("");
   }
 
