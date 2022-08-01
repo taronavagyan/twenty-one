@@ -59,23 +59,23 @@ class Deck {
 }
 
 class Participant {
-  constructor() {
-    this.balance = 5;
+  constructor(balance) {
+    this.balance = balance || 5;
+    this.hand = [];
+  }
+
+  resetHand() {
     this.hand = [];
   }
 
   score() {
+    if (this.hand.some((card) => card.isHidden)) {
+      return TwentyOneGame.RANK_VALUES[this.hand[0].getRank()] + " + ?";
+    }
+
     let cardRanks = this.hand.map((card) => card.getRank());
 
-    let cardValues = cardRanks.map((rank) => {
-      if (Number(rank)) return Number(rank);
-
-      if ("KQJ".includes(rank[0])) {
-        return 10;
-      } else {
-        return 11;
-      }
-    });
+    let cardValues = cardRanks.map((rank) => TwentyOneGame.RANK_VALUES[rank]);
 
     let total = cardValues.reduce((a, b) => a + b);
 
@@ -157,24 +157,69 @@ class Dealer extends Participant {
 }
 
 class TwentyOneGame {
+  static RANK_VALUES = {
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    6: 6,
+    7: 7,
+    8: 8,
+    9: 9,
+    10: 10,
+    JACK: 10,
+    QUEEN: 10,
+    KING: 10,
+    ACE: 11,
+  };
   constructor() {
     this.player = new Player();
     this.dealer = new Dealer();
+    this.reset();
+  }
+
+  reset() {
     this.deck = new Deck();
+    this.player.resetHand();
+    this.dealer.resetHand();
+    this.winner = null;
+    this.loser = null;
   }
 
   start() {
-    // SPIKE
     console.clear();
     this.displayWelcomeMessage();
-    this.dealCards();
-    this.dealer.hide();
-    this.showCards();
-    this.playerTurn();
-    console.log("");
-    this.dealerTurn();
-    this.displayResult();
+    do {
+      this.reset();
+      this.dealCards();
+      this.dealer.hide();
+      this.showCards();
+      this.playerTurn();
+      console.log("");
+      this.dealerTurn();
+      this.displayResult();
+      if (this.winner && this.winner.balance === 10) {
+        if (this.winner === this.player) {
+          console.log("The house is broke!");
+        } else {
+          console.log("It seems like you've run out of money...");
+        }
+        break;
+      }
+    } while (this.playAgain());
     this.displayGoodbyeMessage();
+  }
+
+  playAgain() {
+    let response;
+
+    while (!"yn".includes(response)) {
+      response = readline
+        .question("Would you like to play again? ")
+        .toLowerCase()[0];
+    }
+    console.clear();
+    return response === "y";
   }
 
   dealCards() {
@@ -202,7 +247,7 @@ class TwentyOneGame {
       this.player.addToHand(this.deck.getTopCard());
       this.showCards();
 
-      if (this.player.isBusted()) {
+      if (this.player.hasTwentyOne() || this.player.isBusted()) {
         return;
       }
     }
@@ -235,6 +280,12 @@ class TwentyOneGame {
     }
   }
 
+  pay() {
+    if (this.winner === null) return;
+    this.winner.balance += 1;
+    this.loser.balance -= 1;
+  }
+
   displayWelcomeMessage() {
     console.log("Welcome to 21. Good luck!");
     console.log("");
@@ -247,20 +298,29 @@ class TwentyOneGame {
     if (this.player.isBusted()) {
       console.log("You busted.");
       console.log("Dealer wins!");
+      [this.winner, this.loser] = [this.dealer, this.player];
     } else if (this.dealer.isBusted()) {
       console.log("Dealer busts.");
       console.log("You win!");
+      [this.winner, this.loser] = [this.player, this.dealer];
     } else if (this.player.score() < this.dealer.score()) {
       console.log("Dealer wins!");
+      [this.winner, this.loser] = [this.dealer, this.player];
     } else if (this.player.score() === this.dealer.score()) {
       console.log("It's a tie!");
     } else {
       console.log("You win!");
+      [this.winner, this.loser] = [this.player, this.dealer];
     }
+    this.pay();
+    console.log("");
+    console.log(
+      `Your balance: ${this.player.balance} || Dealer's balance: ${this.dealer.balance}`
+    );
+    console.log("");
   }
 
   displayGoodbyeMessage() {
-    console.log("");
     console.log("Thanks for playing 21. See you soon!");
     console.log("");
   }
