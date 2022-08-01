@@ -67,15 +67,28 @@ class Participant {
   score() {
     let cardRanks = this.hand.map((card) => card.getRank());
 
-    return cardRanks.reduce((total, rank) => {
-      if (Number(rank)) return (total += Number(rank));
+    let cardValues = cardRanks.map((rank) => {
+      if (Number(rank)) return Number(rank);
 
       if ("KQJ".includes(rank[0])) {
-        return (total += 10);
+        return 10;
       } else {
-        return (total += 11);
+        return 11;
       }
-    }, 0);
+    });
+
+    let total = cardValues.reduce((a, b) => a + b);
+
+    while (total > 21 && cardValues.includes(11)) {
+      cardValues = cardValues.map((value) => {
+        if (value === 11) {
+          return 1;
+        }
+        return value;
+      });
+    }
+
+    return cardValues.reduce((a, b) => a + b);
   }
 
   addToHand(card) {
@@ -155,6 +168,7 @@ class TwentyOneGame {
     console.clear();
     this.displayWelcomeMessage();
     this.dealCards();
+    this.dealer.hide();
     this.showCards();
     this.playerTurn();
     console.log("");
@@ -174,7 +188,6 @@ class TwentyOneGame {
     console.log("Your cards... ");
     this.player.displayHand();
     console.log("Dealer's cards... ");
-    this.dealer.hide();
     this.dealer.displayHand();
   }
 
@@ -184,12 +197,12 @@ class TwentyOneGame {
       return;
     }
     while (this.getPlayerMove() === "h") {
+      console.clear();
       this.player.hit();
       this.player.addToHand(this.deck.getTopCard());
-      this.player.displayHand();
+      this.showCards();
 
       if (this.player.isBusted()) {
-        console.log("You busted.");
         return;
       }
     }
@@ -219,9 +232,6 @@ class TwentyOneGame {
       this.dealer.hit();
       this.dealer.addToHand(this.deck.getTopCard());
       this.dealer.displayHand();
-      if (this.dealer.isBusted()) {
-        console.log("Dealer busts.");
-      }
     }
   }
 
@@ -231,9 +241,14 @@ class TwentyOneGame {
   }
 
   displayResult() {
+    this.dealer.reveal();
+    console.clear();
+    this.showCards();
     if (this.player.isBusted()) {
+      console.log("You busted.");
       console.log("Dealer wins!");
     } else if (this.dealer.isBusted()) {
+      console.log("Dealer busts.");
       console.log("You win!");
     } else if (this.player.score() < this.dealer.score()) {
       console.log("Dealer wins!");
